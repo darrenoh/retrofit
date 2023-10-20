@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Composer\InstalledVersions;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
 
