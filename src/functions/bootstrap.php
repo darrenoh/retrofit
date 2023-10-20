@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-use Composer\InstalledVersions;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
-use Drupal\TestTools\Extension\SchemaInspector;
 
 function check_plain(MarkupInterface|\Stringable|string $text): string
 {
@@ -24,8 +22,6 @@ function drupal_get_filename(string $type, string $name, ?string $filename = nul
  */
 function drupal_get_schema(?string $table = null, ?bool $rebuild = false): array|bool
 {
-    $loader = require realpath(InstalledVersions::getRootPackage()['install_path']) . '/vendor/autoload.php';
-    $loader->add('Drupal\\TestTools', InstalledVersions::getInstallPath('drupal/drupal') . '/core/tests');
     $schema = &drupal_static(__FUNCTION__);
     if (!isset($schema) || $rebuild) {
         if (!$rebuild && ($cached = \Drupal::cache()->get(__FUNCTION__))) {
@@ -35,7 +31,15 @@ function drupal_get_schema(?string $table = null, ?bool $rebuild = false): array
             $module_handler = \Drupal::moduleHandler();
             foreach ($module_handler->getModuleList() as $name => $module) {
                 if ($module_handler->loadInclude($name, 'install')) {
-                    $schema += $module_handler->invoke($name, 'schema') ?? [];
+                    foreach ($module_handler->invoke($name, 'schema') ?? [] as $table_name => $table_schema) {
+                        if (empty($table_schema['module'])) {
+                            $table_schema['module'] = $name;
+                        }
+                        if (empty($table_schema['name'])) {
+                            $table_schema['name'] = $table_name;
+                        }
+                        $schema[$table_name] = $table_schema;
+                    }
                 }
             }
             \Drupal::cache()->set(__FUNCTION__, $schema);
