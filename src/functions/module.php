@@ -41,3 +41,10 @@ function module_implements(string $hook, bool $sort = false, bool $reset = false
     }
     return $implementations;
 }
+
+function module_invoke_all(string $hook): array
+{
+    $args = func_get_args();
+    unset($args[0]);
+    return \Drupal::moduleHandler()->invokeAll($hook, $args);
+}
