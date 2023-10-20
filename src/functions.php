@@ -9,6 +9,7 @@ require_once __DIR__ . '/functions/db.php';
 require_once __DIR__ . '/functions/field.php';
 require_once __DIR__ . '/functions/file.php';
 require_once __DIR__ . '/functions/form.php';
+require_once __DIR__ . '/functions/lock.php';
 require_once __DIR__ . '/functions/messages.php';
 require_once __DIR__ . '/functions/module.php';
 require_once __DIR__ . '/functions/node.php';
