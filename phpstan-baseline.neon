@@ -86,6 +86,16 @@ parameters:
 			path: src/DB.php
 
 		-
+			message: "#^Cannot call method setClass\\(\\) on mixed\\.$#"
+			count: 1
+			path: src/Entity/EntityTypeManager.php
+
+		-
+			message: "#^Method Retrofit\\\\Drupal\\\\Entity\\\\EntityTypeManager\\:\\:findDefinitions\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Entity/EntityTypeManager.php
+
+		-
 			message: "#^Method Retrofit\\\\Drupal\\\\Entity\\\\WrappedConfigEntity\\:\\:__get\\(\\) has no return type specified\\.$#"
 			count: 1
 			path: src/Entity/WrappedConfigEntity.php
@@ -1084,6 +1094,11 @@ parameters:
 			message: "#^Parameter \\$vocabulary of anonymous function has invalid type Drupal\\\\taxonomy\\\\VocabularyInterface\\.$#"
 			count: 1
 			path: src/functions/taxonomy.php
+
+		-
+			message: "#^Function theme\\(\\) never returns string so it can be removed from the return type\\.$#"
+			count: 1
+			path: src/functions/theme.php
 
 		-
 			message: "#^Call to an undefined method object\\:\\:createInstance\\(\\)\\.$#"
