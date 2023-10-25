@@ -526,16 +526,6 @@ parameters:
 			path: src/Provider.php
 
 		-
-			message: "#^Cannot access offset 'data' on mixed\\.$#"
-			count: 1
-			path: src/Render/RetrofitHtmlResponseAttachmentsProcessor.php
-
-		-
-			message: "#^Cannot access offset 'type' on mixed\\.$#"
-			count: 1
-			path: src/Render/RetrofitHtmlResponseAttachmentsProcessor.php
-
-		-
 			message: "#^Access to an undefined property object\\:\\:\\$data\\.$#"
 			count: 1
 			path: src/Routing/HookMenuRegistry.php
@@ -711,6 +701,16 @@ parameters:
 			path: src/functions/cache.php
 
 		-
+			message: "#^Cannot call method getLibrariesByExtension\\(\\) on mixed\\.$#"
+			count: 1
+			path: src/functions/common.php
+
+		-
+			message: "#^Cannot call method getLibraryByName\\(\\) on mixed\\.$#"
+			count: 1
+			path: src/functions/common.php
+
+		-
 			message: "#^Function url\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/functions/common.php
@@ -866,6 +866,11 @@ parameters:
 			path: src/functions/file.php
 
 		-
+			message: "#^Call to an undefined method object\\:\\:setFormId\\(\\)\\.$#"
+			count: 2
+			path: src/functions/form.php
+
+		-
 			message: "#^Cannot access offset mixed on mixed\\.$#"
 			count: 2
 			path: src/functions/form.php
@@ -894,6 +899,21 @@ parameters:
 			message: "#^Function form_set_error\\(\\) has parameter \\$name with no type specified\\.$#"
 			count: 1
 			path: src/functions/form.php
+
+		-
+			message: "#^Parameter \\#1 \\$form_arg of method Drupal\\\\Core\\\\Form\\\\FormBuilderInterface\\:\\:buildForm\\(\\) expects Drupal\\\\Core\\\\Form\\\\FormInterface\\|string, object given\\.$#"
+			count: 1
+			path: src/functions/form.php
+
+		-
+			message: "#^Parameter \\#1 \\$form_arg of method Drupal\\\\Core\\\\Form\\\\FormBuilderInterface\\:\\:getForm\\(\\) expects Drupal\\\\Core\\\\Form\\\\FormInterface\\|string, object given\\.$#"
+			count: 1
+			path: src/functions/form.php
+
+		-
+			message: "#^Parameter \\#2 \\$timeout of method Drupal\\\\Core\\\\Lock\\\\LockBackendInterface\\:\\:acquire\\(\\) expects float, float\\|null given\\.$#"
+			count: 1
+			path: src/functions/lock.php
 
 		-
 			message: "#^Function drupal_set_message\\(\\) has no return type specified\\.$#"

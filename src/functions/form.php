@@ -6,6 +6,10 @@ use Drupal\Core\Form\FormStateInterface;
 use Retrofit\Drupal\Form\DrupalGetForm;
 use Retrofit\Drupal\Form\ArrayAccessFormState;
 
+/**
+ * @param mixed[] $form_state
+ * @return mixed[]
+ */
 function drupal_build_form(string $form_id, array &$form_state): array
 {
     $form_object = \Drupal::classResolver(DrupalGetForm::class);
@@ -18,6 +22,9 @@ function drupal_build_form(string $form_id, array &$form_state): array
     return \Drupal::formBuilder()->buildForm($form_object, $form_state);
 }
 
+/**
+ * @return mixed[]
+ */
 function drupal_get_form(string $form_id): array
 {
     $form_object = \Drupal::classResolver(DrupalGetForm::class);

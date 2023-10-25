@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Session\AccountInterface;
+
 function user_access(string $string, ?AccountInterface $account = null): bool
 {
     global $user;

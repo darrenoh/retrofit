@@ -305,11 +305,18 @@ function drupal_add_css(string|null $data = null, array|string|null $options = n
     return [];
 }
 
-function &drupal_array_get_nested_value(array &$array, array $parents, bool &$key_exists = null): mixed
+/**
+ * @param mixed[] $array
+ * @param array<string, int> $parents
+ */
+function &drupal_array_get_nested_value(array &$array, array $parents, ?bool &$key_exists = null): mixed
 {
     return NestedArray::getValue($array, $parents, $key_exists);
 }
 
+/**
+ * @return mixed[]
+ */
 function drupal_get_library(string $module, ?string $name = null): array
 {
     if (isset($name)) {
@@ -324,7 +331,11 @@ function drupal_html_class(string $class): string
     return Html::getClass($class);
 }
 
-function drupal_map_assoc(array $array, ?string $function = null): array
+/**
+ * @param array<string, int> $array
+ * @return mixed[]
+ */
+function drupal_map_assoc(array $array, ?callable $function = null): array
 {
     $array = array_combine($array, $array);
     if (isset($function)) {

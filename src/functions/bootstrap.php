@@ -32,14 +32,16 @@ function drupal_get_schema(?string $table = null, ?bool $rebuild = false): array
             $module_handler = \Drupal::moduleHandler();
             foreach ($module_handler->getModuleList() as $name => $module) {
                 if ($module_handler->loadInclude($name, 'install')) {
-                    foreach ($module_handler->invoke($name, 'schema') ?? [] as $table_name => $table_schema) {
-                        if (empty($table_schema['module'])) {
-                            $table_schema['module'] = $name;
+                    foreach ((array) $module_handler->invoke($name, 'schema') as $table_name => $table_schema) {
+                        if (is_array($table_schema)) {
+                            if (empty($table_schema['module'])) {
+                                $table_schema['module'] = $name;
+                            }
+                            if (empty($table_schema['name'])) {
+                                $table_schema['name'] = $table_name;
+                            }
+                            $schema[$table_name] = $table_schema;
                         }
-                        if (empty($table_schema['name'])) {
-                            $table_schema['name'] = $table_name;
-                        }
-                        $schema[$table_name] = $table_schema;
                     }
                 }
             }
@@ -56,7 +58,7 @@ function drupal_get_schema(?string $table = null, ?bool $rebuild = false): array
     }
 }
 
-function drupal_set_title(string $title = null, int $output = CHECK_PLAIN): string
+function drupal_set_title(?string $title = null, ?int $output = CHECK_PLAIN): ?string
 {
     // @todo Really do this.
     return $title;

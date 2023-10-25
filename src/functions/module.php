@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Extension\Extension;
+
 /**
  * @param string|string[] $type
  */
@@ -42,6 +44,9 @@ function module_implements(string $hook, bool $sort = false, bool $reset = false
     return $implementations;
 }
 
+/**
+ * @return mixed[]
+ */
 function module_invoke_all(string $hook): array
 {
     $args = func_get_args();
@@ -49,19 +54,25 @@ function module_invoke_all(string $hook): array
     return \Drupal::moduleHandler()->invokeAll($hook, $args);
 }
 
-function module_list(bool $refresh = false, bool $bootstrap_refresh = false, bool $sort = false, ?array $fixed_list = null): array
-{
+/**
+ * @param ?string[] $fixed_list
+ * @return string[]
+ */
+function module_list(
+    ?bool $refresh = false,
+    ?bool $bootstrap_refresh = false,
+    ?bool $sort = false,
+    ?array $fixed_list = null
+): array {
     $module_handler = \Drupal::moduleHandler();
+    $modules = $module_handler->getModuleList();
     if (!empty($fixed_list)) {
-        $module_handler->setModuleList($fixed_list);
+        // @todo Implement this.
+        // $module_handler->setModuleList(
     }
     if ($refresh) {
         // @todo Implement this.
     }
-    if ($bootstrap_refresh) {
-        $list = array_keys($module_handler->getBootstrapModules());
-    } else {
-        $list = array_keys($module_handler->getModuleList());
-    }
+    $list = array_keys($modules);
     return array_combine($list, $list);
 }
