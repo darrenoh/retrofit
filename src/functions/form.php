@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Form\FormStateInterface;
 use Retrofit\Drupal\Form\DrupalGetForm;
 use Retrofit\Drupal\Form\ArrayAccessFormState;
 
@@ -22,6 +23,15 @@ function drupal_get_form(string $form_id): array
     $form_object = \Drupal::classResolver(DrupalGetForm::class);
     $form_object->setFormId($form_id);
     return \Drupal::formBuilder()->getForm($form_object);
+}
+
+function form_load_include(
+    FormStateInterface &$form_state,
+    string $type,
+    string $module,
+    ?string $name = null
+): string|false {
+    return $form_state->loadInclude($module, $type, $name);
 }
 
 function form_set_error($name = null, $message = '', $limit_validation_errors = null)

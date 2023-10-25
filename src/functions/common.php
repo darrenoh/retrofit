@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\RevisionableInterface;
+use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Element;
@@ -303,9 +305,32 @@ function drupal_add_css(string|null $data = null, array|string|null $options = n
     return [];
 }
 
+function &drupal_array_get_nested_value(array &$array, array $parents, bool &$key_exists = null): mixed
+{
+    return NestedArray::getValue($array, $parents, $key_exists);
+}
+
+function drupal_get_library(string $module, ?string $name = null): array
+{
+    if (isset($name)) {
+        return \Drupal::service('library.discovery')->getLibraryByName($module, $name);
+    } else {
+        return \Drupal::service('library.discovery')->getLibrariesByExtension($module);
+    }
+}
+
 function drupal_html_class(string $class): string
 {
     return Html::getClass($class);
+}
+
+function drupal_map_assoc(array $array, ?string $function = null): array
+{
+    $array = array_combine($array, $array);
+    if (isset($function)) {
+        $array = array_map($function, $array);
+    }
+    return $array;
 }
 
 function filter_xss_admin(string $string): string

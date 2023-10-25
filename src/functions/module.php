@@ -48,3 +48,20 @@ function module_invoke_all(string $hook): array
     unset($args[0]);
     return \Drupal::moduleHandler()->invokeAll($hook, $args);
 }
+
+function module_list(bool $refresh = false, bool $bootstrap_refresh = false, bool $sort = false, ?array $fixed_list = null): array
+{
+    $module_handler = \Drupal::moduleHandler();
+    if (!empty($fixed_list)) {
+        $module_handler->setModuleList($fixed_list);
+    }
+    if ($refresh) {
+        // @todo Implement this.
+    }
+    if ($bootstrap_refresh) {
+        $list = array_keys($module_handler->getBootstrapModules());
+    } else {
+        $list = array_keys($module_handler->getModuleList());
+    }
+    return array_combine($list, $list);
+}

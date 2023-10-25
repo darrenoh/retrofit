@@ -56,6 +56,12 @@ function drupal_get_schema(?string $table = null, ?bool $rebuild = false): array
     }
 }
 
+function drupal_set_title(string $title = null, int $output = CHECK_PLAIN): string
+{
+    // @todo Really do this.
+    return $title;
+}
+
 function get_t(): string
 {
     return 't';
