@@ -12,7 +12,10 @@ class EntityTypeManager extends \Drupal\Core\Entity\EntityTypeManager
         if (isset($definitions['user_role'])) {
             $definitions['user_role']->setClass(Role::class);
         }
-        $this->moduleHandler->invokeAllWith('entity_type_build', function (callable $hook, string $module) use (&$definitions) {
+        $this->moduleHandler->invokeAllWith('entity_type_build', function (
+            callable $hook,
+            string $module
+        ) use (&$definitions) {
             $hook($definitions);
         });
         foreach ($definitions as $plugin_id => $definition) {
