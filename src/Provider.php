@@ -7,6 +7,7 @@ namespace Retrofit\Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
 use Drupal\Core\Template\Loader\FilesystemLoader;
+use Retrofit\Drupal\Entity\EntityTypeManager;
 use Retrofit\Drupal\Field\FieldTypePluginManager;
 use Retrofit\Drupal\Language\GlobalLanguageContentSetter;
 use Retrofit\Drupal\Menu\LocalActionManager;
@@ -116,6 +117,12 @@ class Provider extends ServiceProviderBase
             FieldTypePluginManager::class,
             (new ChildDefinition('plugin.manager.field.field_type'))
             ->setDecoratedService('plugin.manager.field.field_type')
+        );
+
+        $container->setDefinition(
+            EntityTypeManager::class,
+            (new ChildDefinition('entity_type.manager'))
+            ->setDecoratedService('entity_type.manager')
         );
     }
 
