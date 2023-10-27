@@ -15,7 +15,8 @@ class Role extends \Drupal\user\Entity\Role
     {
         match ($name) {
             'rid' => $this->id = $value,
-            'name' => $this->label = $value
+            'name' => $this->label = $value,
+            default => null
         };
     }
 
@@ -23,7 +24,8 @@ class Role extends \Drupal\user\Entity\Role
     {
         return match ($name) {
             'rid' => $this->id,
-            'name' => $this->label
+            'name' => $this->label,
+            default => null
         };
     }
 
