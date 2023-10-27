@@ -9,6 +9,7 @@ use Drupal\Core\DependencyInjection\ServiceProviderBase;
 use Drupal\Core\Template\Loader\FilesystemLoader;
 use Retrofit\Drupal\Entity\EntityTypeManager;
 use Retrofit\Drupal\Field\FieldTypePluginManager;
+use Retrofit\Drupal\Form\FormValidator;
 use Retrofit\Drupal\Language\GlobalLanguageContentSetter;
 use Retrofit\Drupal\Menu\LocalActionManager;
 use Retrofit\Drupal\Menu\LocalTaskManager;
@@ -123,6 +124,12 @@ class Provider extends ServiceProviderBase
             EntityTypeManager::class,
             (new ChildDefinition('entity_type.manager'))
             ->setDecoratedService('entity_type.manager')
+        );
+
+        $container->setDefinition(
+            FormValidator::class,
+            (new ChildDefinition('form_validator'))
+            ->setDecoratedService('form_validator')
         );
     }
 
