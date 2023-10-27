@@ -30,22 +30,8 @@ class Role extends \Drupal\user\Entity\Role
     public function __isset(string $name): bool
     {
         return match ($name) {
-            'rid' => isset($this->id),
-            'name' => isset($this->label),
+            'rid', 'name' => true,
             default => false
         };
-    }
-
-    public function __unset(string $name): void
-    {
-        switch ($name) {
-            case 'rid':
-                unset($this->id);
-                break;
-
-            case 'name':
-                unset($this->label);
-                break;
-        }
     }
 }

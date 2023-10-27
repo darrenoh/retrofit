@@ -13,6 +13,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ExtensionPathResolver;
+use Drupal\Core\GeneratedUrl;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\RendererInterface;
@@ -48,7 +49,10 @@ function drupal_add_tabledrag(
     drupal_add_library('core', 'drupal.tabledrag');
 }
 
-function drupal_clean_css_identifier(string $identifier, ?array $filter = array(
+/**
+ * @param string[] $filter
+ */
+function drupal_clean_css_identifier(string $identifier, array $filter = array(
   ' ' => '-',
   '_' => '-',
   '/' => '-',
@@ -59,24 +63,38 @@ function drupal_clean_css_identifier(string $identifier, ?array $filter = array(
     return Html::cleanCssIdentifier($identifier, $filter);
 }
 
-function drupal_goto(?string $path = '', ?array $options = array(), ?int $http_response_code = 302): RedirectResponse
+/**
+ * @param mixed[] $options
+ */
+function drupal_goto(string $path = '', array $options = array(), int $http_response_code = 302): void
 {
-    $url = \Drupal::pathValidator()->getUrlIfValid($path);
-    // @todo Throw HTTP exception to terminate request.
-    return new RedirectResponse($url->toString());
+    if ($url = \Drupal::pathValidator()->getUrlIfValidWithoutAccessCheck($path)) {
+        // @todo Throw HTTP exception to terminate request.
+        $goto = $url->toString();
+        if ($goto instanceof GeneratedUrl) {
+            $goto = $goto->getGeneratedUrl();
+        }
+        new RedirectResponse($goto);
+    }
 }
 
+/**
+ * @param mixed[]|object $record
+ * @param string[] $primary_keys
+ */
 function drupal_write_record(string $table, array|object &$record, array|string $primary_keys = array()): int | bool
 {
     $return = false;
-    if ($schema = drupal_get_schema($table)) {
+    if (($schema = (array) drupal_get_schema($table)) && isset($schema['fields']) && is_array($schema['fields'])) {
         $fields = array_intersect_key((array) $record, $schema['fields']);
         foreach ($schema['fields'] as $field => $info) {
-            if (!empty($info['serialize'])) {
-                $fields[$field] = serialize($fields[$field]);
-            }
-            if (empty($primary_keys) && $info['type'] == 'serial') {
-                $serial = $field;
+            if (is_array($info)) {
+                if (!empty($info['serialize'])) {
+                    $fields[$field] = serialize($fields[$field]);
+                }
+                if (empty($primary_keys) && isset($info['type']) && $info['type'] === 'serial') {
+                    $serial = $field;
+                }
             }
         }
         if (empty($primary_keys)) {

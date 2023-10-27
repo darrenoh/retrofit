@@ -96,6 +96,11 @@ parameters:
 			path: src/Entity/EntityTypeManager.php
 
 		-
+			message: "#^Match expression does not handle remaining value\\: string$#"
+			count: 2
+			path: src/Entity/Role.php
+
+		-
 			message: "#^Method Retrofit\\\\Drupal\\\\Entity\\\\WrappedConfigEntity\\:\\:__get\\(\\) has no return type specified\\.$#"
 			count: 1
 			path: src/Entity/WrappedConfigEntity.php
@@ -927,11 +932,6 @@ parameters:
 
 		-
 			message: "#^Function drupal_set_message\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/functions/messages.php
-
-		-
-			message: "#^Parameter \\#1 \\$message of method Drupal\\\\Core\\\\Messenger\\\\MessengerInterface\\:\\:addMessage\\(\\) expects Drupal\\\\Component\\\\Render\\\\MarkupInterface\\|string, Stringable\\|null given\\.$#"
 			count: 1
 			path: src/functions/messages.php
 
