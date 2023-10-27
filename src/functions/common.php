@@ -68,13 +68,19 @@ function drupal_clean_css_identifier(string $identifier, array $filter = array(
  */
 function drupal_goto(string $path = '', array $options = array(), int $http_response_code = 302): void
 {
+    \Drupal::moduleHandler()->alter('drupal_goto', $path, $options, $http_response_code);
     if ($url = \Drupal::pathValidator()->getUrlIfValidWithoutAccessCheck($path)) {
-        // @todo Throw HTTP exception to terminate request.
+        $url->mergeOptions($options);
         $goto = $url->toString();
         if ($goto instanceof GeneratedUrl) {
             $goto = $goto->getGeneratedUrl();
         }
-        new RedirectResponse($goto);
+        $response = new RedirectResponse($goto, $http_response_code);
+        $request = \Drupal::request();
+        $request->getSession()->save();
+        $response->prepare($request);
+        \Drupal::service('kernel')->terminate($request, $response);
+        $response->send();
     }
 }
 

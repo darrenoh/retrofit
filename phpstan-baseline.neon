@@ -721,6 +721,11 @@ parameters:
 			path: src/functions/common.php
 
 		-
+			message: "#^Cannot call method terminate\\(\\) on mixed\\.$#"
+			count: 1
+			path: src/functions/common.php
+
+		-
 			message: "#^Function url\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/functions/common.php
