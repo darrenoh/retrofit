@@ -7,6 +7,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Database\Query\Merge;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\RevisionableInterface;
@@ -15,7 +16,9 @@ use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Url;
 use Retrofit\Drupal\Render\AttachmentResponseSubscriber;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 function drupal_add_tabledrag(
     string $table_id,
@@ -43,6 +46,59 @@ function drupal_add_tabledrag(
     );
     drupal_add_js($settings, 'setting');
     drupal_add_library('core', 'drupal.tabledrag');
+}
+
+function drupal_clean_css_identifier(string $identifier, ?array $filter = array(
+  ' ' => '-',
+  '_' => '-',
+  '/' => '-',
+  '[' => '-',
+  ']' => '',
+)): string
+{
+    return Html::cleanCssIdentifier($identifier, $filter);
+}
+
+function drupal_goto(?string $path = '', ?array $options = array(), ?int $http_response_code = 302): RedirectResponse
+{
+    $url = \Drupal::pathValidator()->getUrlIfValid($path);
+    // @todo Throw HTTP exception to terminate request.
+    return new RedirectResponse($url->toString());
+}
+
+function drupal_write_record(string $table, array|object &$record, array|string $primary_keys = array()): int | bool
+{
+    $return = false;
+    if ($schema = drupal_get_schema($table)) {
+        $fields = array_intersect_key((array) $record, $schema['fields']);
+        foreach ($schema['fields'] as $field => $info) {
+            if (!empty($info['serialize'])) {
+                $fields[$field] = serialize($fields[$field]);
+            }
+            if (empty($primary_keys) && $info['type'] == 'serial') {
+                $serial = $field;
+            }
+        }
+        if (empty($primary_keys)) {
+            $query_return = \Drupal::database()->insert($table)
+            ->fields($fields)
+            ->execute();
+            if (isset($serial)) {
+                if (is_array($record)) {
+                    $record[$serial] = $query_return;
+                } else {
+                    $record->$serial = $query_return;
+                }
+            }
+            $return = Merge::STATUS_INSERT;
+        } else {
+            $return = \Drupal::database()->merge($table)
+            ->keys((array) $primary_keys)
+            ->fields($fields)
+            ->execute() ?? false;
+        }
+    }
+    return $return;
 }
 
 /**
