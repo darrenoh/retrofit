@@ -12,7 +12,7 @@ use Retrofit\Drupal\Entity\EntityFormBuilder;
 use Retrofit\Drupal\Entity\EntityTypeManager;
 use Retrofit\Drupal\Entity\HtmlEntityFormController;
 use Retrofit\Drupal\Field\FieldTypePluginManager;
-use Retrofit\Drupal\Form\FormValidator;
+use Retrofit\Drupal\Form\FormBuilder;
 use Retrofit\Drupal\Language\GlobalLanguageContentSetter;
 use Retrofit\Drupal\Menu\LocalActionManager;
 use Retrofit\Drupal\Menu\LocalTaskManager;
