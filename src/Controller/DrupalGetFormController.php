@@ -8,7 +8,6 @@ use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
-use Drupal\Core\Form\FormState;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Retrofit\Drupal\Form\ArrayAccessFormState;
 use Retrofit\Drupal\Form\DrupalGetForm;
@@ -49,7 +48,7 @@ final class DrupalGetFormController implements ContainerInjectionInterface
             DrupalGetForm::class
         );
         $form_object->setFormId($route->getDefault('_form_id'));
-        $form_state = new ArrayAccessFormState(new FormState());
+        $form_state = new ArrayAccessFormState();
         $args = $routeMatch->getRawParameters()->all();
         $form_state->addBuildInfo('args', array_values($args));
         return $this->formBuilder->buildForm($form_object, $form_state);
