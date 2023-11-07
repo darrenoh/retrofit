@@ -256,6 +256,11 @@ parameters:
 			path: src/Plugin/Derivative/FieldItemDeriver.php
 
 		-
+			message: "#^Parameter \\#1 \\$moduleHandler of class Retrofit\\\\Drupal\\\\Plugin\\\\Derivative\\\\FieldWidgetDeriver constructor expects Drupal\\\\Core\\\\Extension\\\\ModuleHandlerInterface, object given\\.$#"
+			count: 1
+			path: src/Plugin/Derivative/FieldWidgetDeriver.php
+
+		-
 			message: "#^Method Retrofit\\\\Drupal\\\\Plugin\\\\Derivative\\\\LocalActionDeriver\\:\\:getDerivativeDefinitions\\(\\) has parameter \\$base_plugin_definition with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Plugin/Derivative/LocalActionDeriver.php
