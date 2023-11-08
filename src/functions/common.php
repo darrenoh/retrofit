@@ -7,6 +7,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Asset\LibraryDiscoveryInterface;
 use Drupal\Core\Database\Query\Merge;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -47,20 +48,6 @@ function drupal_add_tabledrag(
     );
     drupal_add_js($settings, 'setting');
     drupal_add_library('core', 'drupal.tabledrag');
-}
-
-/**
- * @param string[] $filter
- */
-function drupal_clean_css_identifier(string $identifier, array $filter = array(
-  ' ' => '-',
-  '_' => '-',
-  '/' => '-',
-  '[' => '-',
-  ']' => '',
-)): string
-{
-    return Html::cleanCssIdentifier($identifier, $filter);
 }
 
 /**
@@ -385,43 +372,9 @@ function drupal_add_css(string|null $data = null, array|string|null $options = n
     return [];
 }
 
-/**
- * @param mixed[] $array
- * @param array<string, int> $parents
- */
-function &drupal_array_get_nested_value(array &$array, array $parents, ?bool &$key_exists = null): mixed
-{
-    return NestedArray::getValue($array, $parents, $key_exists);
-}
-
-/**
- * @return mixed[]
- */
-function drupal_get_library(string $module, ?string $name = null): array
-{
-    if (isset($name)) {
-        return \Drupal::service('library.discovery')->getLibraryByName($module, $name);
-    } else {
-        return \Drupal::service('library.discovery')->getLibrariesByExtension($module);
-    }
-}
-
 function drupal_html_class(string $class): string
 {
     return Html::getClass($class);
-}
-
-/**
- * @param array<string, int> $array
- * @return mixed[]
- */
-function drupal_map_assoc(array $array, ?callable $function = null): array
-{
-    $array = array_combine($array, $array);
-    if (isset($function)) {
-        $array = array_map($function, $array);
-    }
-    return $array;
 }
 
 function filter_xss_admin(string $string): string
@@ -442,4 +395,73 @@ function filter_xss(string $string, array $allowed_tags = [
 function filter_xss_bad_protocol(string $string, bool $decode = true): string
 {
     return UrlHelper::filterBadProtocol($string);
+}
+
+
+/**
+ * @param array<string|int> $array
+ * @return array<string|int, mixed>
+ */
+function drupal_map_assoc(array $array, ?callable $function = null): array
+{
+    $array = array_combine($array, $array);
+    if ($function !== null) {
+        $array = array_map($function, $array);
+    }
+    return $array;
+}
+
+/**
+ * @param string[] $filter
+ */
+function drupal_clean_css_identifier(string $identifier, array $filter = [
+    ' ' => '-',
+    '_' => '-',
+    '/' => '-',
+    '[' => '-',
+    ']' => '',
+]): string
+{
+    return Html::cleanCssIdentifier($identifier, $filter);
+}
+
+/**
+ * @param array<int|string, mixed> $array
+ * @param array<int, int|string> $parents
+ */
+function &drupal_array_get_nested_value(array &$array, array $parents, ?bool &$key_exists = null): mixed
+{
+    return NestedArray::getValue($array, $parents, $key_exists);
+}
+
+/**
+ * @param array<int|string, mixed> $array
+ * @param array<int, int|string> $parents
+ */
+function drupal_array_set_nested_value(array &$array, array $parents, mixed $value, bool $force = false): void
+{
+    NestedArray::setValue($array, $parents, $value, $force);
+}
+
+/**
+ * @param array<int|string, mixed> $array
+ * @param array<int, int|string> $parents
+ */
+function drupal_array_nested_key_exists(array $array, array $parents): bool
+{
+    return NestedArray::keyExists($array, $parents);
+}
+
+/**
+ * @return array<string, mixed>|false
+ */
+function drupal_get_library(string $module, ?string $name = null): array|false
+{
+    $libraryDiscovery = \Drupal::service('library.discovery');
+    assert($libraryDiscovery instanceof LibraryDiscoveryInterface);
+    if ($name !== null) {
+        return $libraryDiscovery->getLibraryByName($module, $name);
+    }
+
+    return $libraryDiscovery->getLibrariesByExtension($module);
 }

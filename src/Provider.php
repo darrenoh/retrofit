@@ -8,6 +8,7 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
 use Drupal\Core\Template\Loader\FilesystemLoader;
 use Retrofit\Drupal\Controller\HtmlFormController;
+use Retrofit\Drupal\Controller\RetrofitTitleResolver;
 use Retrofit\Drupal\Entity\EntityFormBuilder;
 use Retrofit\Drupal\Entity\EntityTypeManager;
 use Retrofit\Drupal\Entity\HtmlEntityFormController;
@@ -122,6 +123,10 @@ class Provider extends ServiceProviderBase
             (new ChildDefinition('plugin.manager.field.field_type'))
             ->setDecoratedService('plugin.manager.field.field_type')
         );
+
+        $container->register(RetrofitTitleResolver::class)
+            ->setDecoratedService('title_resolver')
+            ->addArgument(new Reference(RetrofitTitleResolver::class . '.inner'));
 
         $container->setDefinition(
             FormBuilder::class,

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Drupal\Core\Extension\Extension;
+use Drupal\Core\Extension\ModuleExtensionList;
 
 /**
  * @param string|string[] $type
@@ -44,8 +45,15 @@ function module_implements(string $hook, bool $sort = false, bool $reset = false
     return $implementations;
 }
 
+function module_invoke(string $module, string $hook): mixed
+{
+    $args = func_get_args();
+    unset($args[0], $args[1]);
+    return \Drupal::moduleHandler()->invoke($module, $hook, $args);
+}
+
 /**
- * @return mixed[]
+ * @return array<int, mixed>
  */
 function module_invoke_all(string $hook): array
 {
@@ -55,24 +63,32 @@ function module_invoke_all(string $hook): array
 }
 
 /**
- * @param ?string[] $fixed_list
+ * @param array<string, array{filename: string}> $fixed_list
  * @return string[]
  */
 function module_list(
-    ?bool $refresh = false,
-    ?bool $bootstrap_refresh = false,
-    ?bool $sort = false,
+    bool $refresh = false,
+    bool $bootstrap_refresh = false,
+    bool $sort = false,
     ?array $fixed_list = null
 ): array {
-    $module_handler = \Drupal::moduleHandler();
-    $modules = $module_handler->getModuleList();
-    if (!empty($fixed_list)) {
-        // @todo Implement this.
-        // $module_handler->setModuleList(
+    if ($fixed_list !== null) {
+        $moduleExtensionList = \Drupal::service('extension.list.module');
+        assert($moduleExtensionList instanceof ModuleExtensionList);
+        $moduleNames = array_keys($fixed_list);
+        $newList = array_map(
+            static fn (string $name) => $moduleExtensionList->get($name),
+            $moduleNames
+        );
+        \Drupal::moduleHandler()->setModuleList(
+            array_combine($moduleNames, $newList)
+        );
     }
-    if ($refresh) {
-        // @todo Implement this.
+    $list = array_keys(\Drupal::moduleHandler()->getModuleList());
+    $list = array_combine($list, $list);
+
+    if ($sort) {
+        ksort($list);
     }
-    $list = array_keys($modules);
-    return array_combine($list, $list);
+    return $list;
 }
