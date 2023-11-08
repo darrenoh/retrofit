@@ -7,11 +7,8 @@ namespace Retrofit\Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
 use Drupal\Core\Template\Loader\FilesystemLoader;
-use Retrofit\Drupal\Controller\HtmlFormController;
 use Retrofit\Drupal\Controller\RetrofitTitleResolver;
-use Retrofit\Drupal\Entity\EntityFormBuilder;
 use Retrofit\Drupal\Entity\EntityTypeManager;
-use Retrofit\Drupal\Entity\HtmlEntityFormController;
 use Retrofit\Drupal\Field\FieldTypePluginManager;
 use Retrofit\Drupal\Form\FormBuilder;
 use Retrofit\Drupal\Language\GlobalLanguageContentSetter;
@@ -132,24 +129,6 @@ class Provider extends ServiceProviderBase
             FormBuilder::class,
             (new ChildDefinition('form_builder'))
             ->setDecoratedService('form_builder')
-        );
-
-        $container->setDefinition(
-            EntityFormBuilder::class,
-            (new ChildDefinition('entity.form_builder'))
-            ->setDecoratedService('entity.form_builder')
-        );
-
-        $container->setDefinition(
-            HtmlEntityFormController::class,
-            (new ChildDefinition('controller.entity_form'))
-            ->setDecoratedService('controller.entity_form')
-        );
-
-        $container->setDefinition(
-            HtmlFormController::class,
-            (new ChildDefinition('controller.form'))
-            ->setDecoratedService('controller.form')
         );
 
         $container->setDefinition(
