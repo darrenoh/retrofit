@@ -38,93 +38,76 @@ final class HookMenuRoutes extends RouteSubscriberBase
      *   'page callback': string|string[],
      *   'page arguments'?: array<int|string>,
      *   'load arguments'?: array<int|string>,
+     *   title?: string,
      *   'title callback'?: string|string[],
      *   'title arguments'?: array<int|string>,
      *   'access callback'?: string|string[]|bool,
      *   'access arguments'?: array<int|string>,
      *   file?: string,
-     *   'file path'?: string,
-     *   title?: string
+     *   'file path'?: string
      * } $definition
      */
     private function convertToRoute(string $module, string $path, array $definition): Route
     {
-        $pageArguments = $definition['page arguments'] ?? [];
+        $definition += [
+            'page arguments' => [],
+            'load arguments' => [],
+            'title' => '',
+            'title callback' => '',
+            'title arguments' => [],
+            'access callback' => '',
+            'access arguments' => [],
+            'file path' => $this->moduleHandler->getModule($module)->getPath(),
+        ];
+        $loadArguments = $definition['load arguments'];
         $parameters = [];
         $pathParts = [];
         foreach (explode('/', $path) as $key => $item) {
             if (!str_starts_with($item, '%')) {
                 $pathParts[] = $item;
             } else {
+                $parameter = ['converter' => PageArgumentsConverter::class];
                 $placeholder = substr($item, 1);
                 if ($placeholder === '') {
                     $placeholder = "arg$key";
+                } else {
+                    $parameter += [
+                        'load arguments' => &$loadArguments,
+                        'index' => $key,
+                    ];
                 }
-                $parameters[$placeholder] = [
-                  'converter' => PageArgumentsConverter::class,
-                  'load arguments' => $definition['load arguments'] ?? [],
-                  'index' => $key,
-                ];
+                $parameters[$placeholder] = $parameter;
                 $pathParts[] = '{' . $placeholder . '}';
             }
         }
+        foreach ($loadArguments as &$loadArgument) {
+            $loadArgument = match (true) {
+                is_int($loadArgument) => $pathParts[$loadArgument],
+                $loadArgument === 'map' => $pathParts,
+                default => $loadArgument,
+            };
+        }
+        $pageArguments = $definition['page arguments'];
         foreach ($pageArguments as &$pageArgument) {
             if (is_int($pageArgument)) {
                 $pageArgument = $pathParts[$pageArgument];
             }
         }
         if (isset($definition['file'])) {
-            $definition['file path'] = $definition['file path'] ?? $this->moduleHandler->getModule($module)->getPath();
             @include_once $definition['file path'] . '/' . $definition['file'];
         }
-        $defaults = [];
-        if (is_callable($definition['page callback'])) {
-            $pageCallback = match (true) {
-                is_array($definition['page callback']) => new \ReflectionMethod(...$definition['page callback']),
-                strpos($definition['page callback'], '::') !== false => new \ReflectionMethod(
-                    ...explode('::', $definition['page callback'], 2)
-                ),
-                default => new \ReflectionFunction($definition['page callback']),
-            };
-            $paramCount = $pageCallback->getNumberOfParameters();
-            if ($paramCount > count($pageArguments)) {
-                $required = $pageCallback->getNumberOfRequiredParameters() - count($pageArguments);
-                if ($required > 0) {
-                    for ($i = 0; $i < $required; ++$i) {
-                        $placeholder = 'arg' . ++$key;
-                        $parameters[$placeholder] = [
-                            'converter' => PageArgumentsConverter::class,
-                        ];
-                        $pathParts[] = '{' . $placeholder . '}';
-                    }
-                }
-                $optional = $paramCount - $required;
-                if ($optional > 0) {
-                    for ($i = 0; $i < $optional; ++$i) {
-                        $placeholder = 'arg' . ++$key;
-                        $parameters[$placeholder] = [
-                            'converter' => PageArgumentsConverter::class,
-                        ];
-                        $defaults[$placeholder] = null;
-                        $pathParts[] = '{' . $placeholder . '}';
-                    }
-                }
-            }
-        }
         $route = new Route('/' . implode('/', $pathParts));
-        $route->addDefaults($defaults);
-        $route->setDefault('_title', $definition['title'] ?? '');
+        $route->setDefault('_title', $definition['title']);
 
-        $titleCallback = $definition['title callback'] ?? '';
-        if ($titleCallback !== '') {
+        if ($definition['title callback'] !== '') {
             $route->setDefault('_title_callback', '\Retrofit\Drupal\Controller\PageCallbackController::getTitle');
-            $titleArguments = $definition['title arguments'] ?? [];
+            $titleArguments = $definition['title arguments'];
             foreach ($titleArguments as &$titleArgument) {
                 if (is_int($titleArgument)) {
                     $titleArgument = $pathParts[$titleArgument];
                 }
             }
-            $route->setDefault('_custom_title_callback', $titleCallback);
+            $route->setDefault('_custom_title_callback', $definition['title callback']);
             $route->setDefault('_custom_title_arguments', $titleArguments);
         }
 
@@ -136,15 +119,14 @@ final class HookMenuRoutes extends RouteSubscriberBase
             $route->setDefault('_menu_callback', $definition['page callback']);
         }
 
-        $accessCallback = $definition['access callback'] ?? '';
-        $accessArguments = $definition['access arguments'] ?? [];
-        if ($accessCallback === '' || $accessCallback === 'user_access') {
-            $route->setRequirement('_permission', reset($accessArguments) ?: '');
-        } elseif (is_bool($accessCallback)) {
-            $route->setRequirement('_access', $accessCallback ? 'TRUE' : 'FALSE');
+        $accessArguments = $definition['access arguments'];
+        if ($definition['access callback'] === '' || $definition['access callback'] === 'user_access') {
+            $route->setRequirement('_permission', (string) reset($accessArguments) ?: '');
+        } elseif (is_bool($definition['access callback'])) {
+            $route->setRequirement('_access', $definition['access callback'] ? 'TRUE' : 'FALSE');
         } else {
             $route->setRequirement('_custom_access', '\Retrofit\Drupal\Access\CustomControllerAccessCallback::check');
-            $route->setDefault('_custom_access_callback', $accessCallback);
+            $route->setDefault('_custom_access_callback', $definition['access callback']);
             foreach ($accessArguments as &$accessArgument) {
                 if (is_int($accessArgument)) {
                     $accessArgument = $pathParts[$accessArgument];

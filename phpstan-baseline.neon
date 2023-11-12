@@ -26,17 +26,7 @@ parameters:
 			path: src/Controller/DrupalGetFormController.php
 
 		-
-			message: "#^Parameter \\#1 \\$name of method Drupal\\\\Core\\\\Extension\\\\ModuleHandlerInterface\\:\\:getModule\\(\\) expects string, mixed given\\.$#"
-			count: 1
-			path: src/Controller/DrupalGetFormController.php
-
-		-
 			message: "#^Parameter \\#2 \\$formBuilder of class Retrofit\\\\Drupal\\\\Controller\\\\DrupalGetFormController constructor expects Drupal\\\\Core\\\\Form\\\\FormBuilderInterface, object given\\.$#"
-			count: 1
-			path: src/Controller/DrupalGetFormController.php
-
-		-
-			message: "#^Parameter \\#3 \\$moduleHandler of class Retrofit\\\\Drupal\\\\Controller\\\\DrupalGetFormController constructor expects Drupal\\\\Core\\\\Extension\\\\ModuleHandlerInterface, object given\\.$#"
 			count: 1
 			path: src/Controller/DrupalGetFormController.php
 
@@ -547,16 +537,6 @@ parameters:
 
 		-
 			message: "#^Method Retrofit\\\\Drupal\\\\Routing\\\\HookMenuRoutes\\:\\:alterRoutes\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/Routing/HookMenuRoutes.php
-
-		-
-			message: "#^Offset 'file path' might not exist on array\\{page callback\\: array\\<string\\>\\|string, page arguments\\?\\: array\\<int\\|string\\>, load arguments\\?\\: array\\<int\\|string\\>, title callback\\?\\: array\\<string\\>\\|string, title arguments\\?\\: array\\<int\\|string\\>, access callback\\?\\: array\\<string\\>\\|bool\\|string, access arguments\\?\\: array\\<int\\|string\\>, file\\: string, \\.\\.\\.\\}\\.$#"
-			count: 1
-			path: src/Routing/HookMenuRoutes.php
-
-		-
-			message: "#^Parameter \\#2 \\$regex of method Symfony\\\\Component\\\\Routing\\\\Route\\:\\:setRequirement\\(\\) expects string, int\\<min, \\-1\\>\\|int\\<1, max\\>\\|string given\\.$#"
 			count: 1
 			path: src/Routing/HookMenuRoutes.php
 

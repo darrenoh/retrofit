@@ -6,7 +6,6 @@ namespace Retrofit\Drupal\Controller;
 
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Retrofit\Drupal\Form\ArrayAccessFormState;
@@ -17,8 +16,7 @@ final class DrupalGetFormController implements ContainerInjectionInterface
 {
     public function __construct(
         private readonly ClassResolverInterface $classResolver,
-        private readonly FormBuilderInterface $formBuilder,
-        private readonly ModuleHandlerInterface $moduleHandler
+        private readonly FormBuilderInterface $formBuilder
     ) {
     }
 
@@ -26,8 +24,7 @@ final class DrupalGetFormController implements ContainerInjectionInterface
     {
         return new self(
             $container->get('class_resolver'),
-            $container->get('form_builder'),
-            $container->get('module_handler')
+            $container->get('form_builder')
         );
     }
 
@@ -36,10 +33,7 @@ final class DrupalGetFormController implements ContainerInjectionInterface
         $route = $routeMatch->getRouteObject();
         assert($route !== null);
         if ($route->hasOption('file')) {
-            $modulePath = $this->moduleHandler->getModule(
-                $route->getOption('module')
-            )->getPath();
-            $includePath = $modulePath . '/' . $route->getOption('file');
+            $includePath = $route->getOption('file path') . '/' . $route->getOption('file');
             if (file_exists($includePath)) {
                 require_once $includePath;
             }
