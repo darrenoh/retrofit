@@ -31,7 +31,7 @@ class HookMenuRoutesTest extends TestCase
             $moduleHandler,
             new NullBackend('foo')
         );
-        $sut = new HookMenuRoutes($hookMenuRegistry);
+        $sut = new HookMenuRoutes($moduleHandler, $hookMenuRegistry);
         $collection = new RouteCollection();
         $event = new RouteBuildEvent($collection);
         $sut->onAlterRoutes($event);
