@@ -14,11 +14,12 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ExtensionPathResolver;
+use Drupal\Core\Form\EnforcedResponseException;
 use Drupal\Core\GeneratedUrl;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Url;
+use Retrofit\Drupal\DB;
 use Retrofit\Drupal\Render\AttachmentResponseSubscriber;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -48,68 +49,6 @@ function drupal_add_tabledrag(
     );
     drupal_add_js($settings, 'setting');
     drupal_add_library('core', 'drupal.tabledrag');
-}
-
-/**
- * @param mixed[] $options
- */
-function drupal_goto(string $path = '', array $options = array(), int $http_response_code = 302): void
-{
-    \Drupal::moduleHandler()->alter('drupal_goto', $path, $options, $http_response_code);
-    if ($url = \Drupal::pathValidator()->getUrlIfValidWithoutAccessCheck($path)) {
-        $url->mergeOptions($options);
-        $goto = $url->toString();
-        if ($goto instanceof GeneratedUrl) {
-            $goto = $goto->getGeneratedUrl();
-        }
-        $response = new RedirectResponse($goto, $http_response_code);
-        $request = \Drupal::request();
-        $request->getSession()->save();
-        $response->prepare($request);
-        \Drupal::service('kernel')->terminate($request, $response);
-        $response->send();
-    }
-}
-
-/**
- * @param mixed[]|object $record
- * @param string[] $primary_keys
- */
-function drupal_write_record(string $table, array|object &$record, array|string $primary_keys = array()): int | bool
-{
-    $return = false;
-    if (($schema = (array) drupal_get_schema($table)) && isset($schema['fields']) && is_array($schema['fields'])) {
-        $fields = array_intersect_key((array) $record, $schema['fields']);
-        foreach ($schema['fields'] as $field => $info) {
-            if (is_array($info)) {
-                if (!empty($info['serialize'])) {
-                    $fields[$field] = serialize($fields[$field]);
-                }
-                if (empty($primary_keys) && isset($info['type']) && $info['type'] === 'serial') {
-                    $serial = $field;
-                }
-            }
-        }
-        if (empty($primary_keys)) {
-            $query_return = \Drupal::database()->insert($table)
-            ->fields($fields)
-            ->execute();
-            if (isset($serial)) {
-                if (is_array($record)) {
-                    $record[$serial] = $query_return;
-                } else {
-                    $record->$serial = $query_return;
-                }
-            }
-            $return = Merge::STATUS_INSERT;
-        } else {
-            $return = \Drupal::database()->merge($table)
-            ->keys((array) $primary_keys)
-            ->fields($fields)
-            ->execute() ?? false;
-        }
-    }
-    return $return;
 }
 
 /**
@@ -464,4 +403,117 @@ function drupal_get_library(string $module, ?string $name = null): array|false
     }
 
     return $libraryDiscovery->getLibrariesByExtension($module);
+}
+
+
+/**
+ * @param array<string, mixed> $options
+ */
+function drupal_goto(string $path = '', array $options = [], int $http_response_code = 302): void
+{
+    \Drupal::moduleHandler()->alter('drupal_goto', $path, $options, $http_response_code);
+    $url = \Drupal::pathValidator()->getUrlIfValidWithoutAccessCheck($path);
+    if ($url !== false) {
+        $url->mergeOptions($options);
+        $goto = $url->toString();
+        if ($goto instanceof GeneratedUrl) {
+            $goto = $goto->getGeneratedUrl();
+        }
+        $response = new RedirectResponse($goto, $http_response_code);
+        throw new EnforcedResponseException($response);
+    }
+}
+
+/**
+ * @param array<string, mixed>|object $record
+ * @param string[] $primary_keys
+ */
+function drupal_write_record(string $table, array|object &$record, array|string $primary_keys = []): int|false
+{
+    if (is_string($primary_keys)) {
+        $primary_keys = [$primary_keys];
+    }
+
+    $schema = drupal_get_schema($table);
+    if (empty($schema)) {
+        return false;
+    }
+
+    $object = (object) $record;
+    $fields = [];
+
+    foreach ($schema['fields'] as $field => $info) {
+        if ($info['type'] === 'serial') {
+            if (!empty($primary_keys)) {
+                continue;
+            }
+            $serial = $field;
+        }
+        if (in_array($field, $primary_keys, true)) {
+            continue;
+        }
+        if (!property_exists($object, $field)) {
+            continue;
+        }
+        if (empty($info['serialize'])) {
+            $fields[$field] = $object->$field;
+        } else {
+            $fields[$field] = serialize($object->$field);
+        }
+        if (isset($object->$field) || !empty($info['not null'])) {
+            if ($info['type'] === 'int' || $info['type'] === 'serial') {
+                $fields[$field] = (int) $fields[$field];
+            } elseif ($info['type'] === 'float') {
+                $fields[$field] = (float) $fields[$field];
+            } else {
+                $fields[$field] = (string) $fields[$field];
+            }
+        }
+    }
+
+    if (empty($fields)) {
+        // In Drupal 7 this actually returned `null` which was invalid.
+        // But, developers were probably using `!empty` checks, so we are returning `false`.
+        return false;
+    }
+
+    if (empty($primary_keys)) {
+        if (isset($serial) && isset($fields[$serial]) && !$fields[$serial]) {
+            unset($fields[$serial]);
+        }
+        $query = db_insert($table)->fields($fields);
+        $return = SAVED_NEW;
+    } else {
+        $query = db_update($table)->fields($fields);
+        foreach ($primary_keys as $key) {
+            $query->condition($key, $object->$key);
+        }
+        $return = SAVED_UPDATED;
+    }
+    $query_return = $query->execute();
+    if ($query_return && isset($serial)) {
+        // If the database was not told to return the last insert id, it will be
+        // because we already know it.
+        if ($return === SAVED_NEW && isset($fields[$serial])) {
+            $object->$serial = $fields[$serial];
+        } else {
+            $object->$serial = DB::get()->lastInsertId();
+        }
+    } elseif ($query_return === false && count($primary_keys) == 1) {
+        $return = false;
+    }
+    if (empty($primary_keys)) {
+        foreach ($schema['fields'] as $field => $info) {
+            if (isset($info['default']) && !property_exists($object, $field)) {
+                $object->$field = $info['default'];
+            }
+        }
+    }
+
+    // If we began with an array, convert back.
+    if (is_array($record)) {
+        $record = (array) $object;
+    }
+
+    return $return;
 }
