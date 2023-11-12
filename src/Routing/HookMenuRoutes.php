@@ -45,7 +45,6 @@ final class HookMenuRoutes extends RouteSubscriberBase
                     $placeholder = "arg$key";
                 }
                 $parameters[$placeholder] = [
-                  'type' => $placeholder === '' ? $key : $placeholder,
                   'converter' => PageArgumentsConverter::class,
                   'load arguments' => $definition['load arguments'] ?? [],
                   'index' => $key,
@@ -99,15 +98,12 @@ final class HookMenuRoutes extends RouteSubscriberBase
         if (isset($definition['file'])) {
             $route->setOption('file', $definition['file']);
         }
-        if (count($parameters) === 0 && count($pageArguments) > 0) {
-            foreach ($pageArguments as $key => $pageArgument) {
-                $parameters["arg$key"] = [
-                  'type' => $pageArgument,
-                  'converter' => PageArgumentsConverter::class,
-                ];
-                $route->setDefault("arg$key", $pageArgument);
+        foreach ($pageArguments as &$pageArgument) {
+            if (is_int($pageArgument)) {
+                $pageArgument = $pathParts[$pageArgument];
             }
         }
+        $route->setDefault('_custom_page_arguments', $pageArguments);
         if (count($parameters) > 0) {
             $route->setOption('parameters', $parameters);
         }

@@ -58,7 +58,12 @@ final class PageCallbackController implements ContainerInjectionInterface
         if (!is_callable($callback)) {
             throw new NotFoundHttpException();
         }
-        $arguments = $routeMatch->getParameters()->all();
+        $arguments = (array) $route->getDefault('_custom_page_arguments');
+        foreach ($arguments as &$argument) {
+            if (is_string($argument) && $placeholder = preg_filter('/(^{)(.*)(}$)/', '$2', $argument)) {
+                $argument = $routeMatch->getParameter($placeholder);
+            }
+        }
         $result = call_user_func_array($callback, array_values($arguments));
         return is_string($result) ? [
           '#markup' => Markup::create($result),

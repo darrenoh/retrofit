@@ -25,7 +25,7 @@ final class PageArgumentsConverter implements ParamConverterInterface
             $map = explode('/', ltrim($defaults['_request']->getPathInfo(), '/'));
             foreach ((array) $definition['load arguments'] as &$arg) {
                 $arg = match (true) {
-                    is_numeric($arg) => $map[$arg],
+                    is_int($arg) => $map[$arg],
                     $arg === 'map' => $map,
                     $arg === 'index' => $definition['index'],
                     default => $arg,

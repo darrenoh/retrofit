@@ -566,11 +566,6 @@ parameters:
 			path: src/Routing/HookMenuRoutes.php
 
 		-
-			message: "#^Strict comparison using \\=\\=\\= between non\\-empty\\-string and '' will always evaluate to false\\.$#"
-			count: 1
-			path: src/Routing/HookMenuRoutes.php
-
-		-
 			message: "#^Cannot access offset '\\#title' on mixed\\.$#"
 			count: 1
 			path: src/Theme/HookPreprocess.php
