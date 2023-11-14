@@ -107,3 +107,14 @@ function watchdog(
     $variables['link'] = $link ?? '';
     \Drupal::logger($type)->log($severity, $message, $variables);
 }
+
+function drupal_is_https() {
+    $is_https = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
+  
+    // elc specific ssl header check.
+    // So, we're assuming that the server is either using HTTPS or HTTP_SSL_HEADER
+    if (isset($_SERVER['HTTP_SSL_HEADER']) && substr($_SERVER['HTTP_SSL_HEADER'], 0, 1) === '1') {
+      $is_https = TRUE;
+    }
+    return $is_https;
+  }

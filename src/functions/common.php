@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
@@ -265,7 +266,7 @@ function drupal_add_js(array|string|null $data = null, array|string|null $option
 
         case 'inline':
             $attachment_subscriber->addAttachments([
-                'js' => [$options],
+                'js' => $options,
             ]);
             break;
 
@@ -516,4 +517,35 @@ function drupal_write_record(string $table, array|object &$record, array|string 
     }
 
     return $return;
+}
+
+function drupal_realpath($path) {
+    return \Drupal::service('file_system')->realpath($path);
+}
+
+function request_uri() {
+    return \Drupal::request()->getRequestUri();
+}
+
+function format_string($string, array $args = []) {
+    return new FormattableMarkup($string, $args);
+}
+
+function drupal_json_encode($data) {
+    return Drupal\Component\Serialization\Json::encode($data);
+}
+
+function drupal_json_decode(array $data) {
+    return Drupal\Component\Serialization\Json::decode($data);
+}
+
+function drupal_get_query_array($query) {
+    $result = array();
+    if (!empty($query)) {
+        foreach (explode('&', $query) as $param) {
+        $param = explode('=', $param, 2);
+        $result[$param[0]] = isset($param[1]) ? rawurldecode($param[1]) : '';
+        }
+    }
+    return $result;
 }

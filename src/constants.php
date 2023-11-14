@@ -58,6 +58,8 @@ const BLOCK_VISIBILITY_LISTED = 1;
 
 const BLOCK_VISIBILITY_PHP = 2;
 
+const CSS_DEFAULT = 0;
+
 require_once __DIR__ . '/constants/bootstrap.php';
 require_once __DIR__ . '/constants/comment.php';
 require_once __DIR__ . '/constants/field.php';
