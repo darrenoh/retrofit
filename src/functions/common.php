@@ -265,7 +265,7 @@ function drupal_add_js(array|string|null $data = null, array|string|null $option
 
         case 'inline':
             $attachment_subscriber->addAttachments([
-                'js' => [$options],
+                'js' => $options,
             ]);
             break;
 
