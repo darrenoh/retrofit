@@ -17,6 +17,7 @@ use Retrofit\Drupal\Menu\LocalTaskManager;
 use Retrofit\Drupal\Menu\MenuLinkManager;
 use Retrofit\Drupal\Extension\ModuleHandler;
 use Retrofit\Drupal\ParamConverter\PageArgumentsConverter;
+use Retrofit\Drupal\Path\CurrentPathStack;
 use Retrofit\Drupal\Render\AttachmentResponseSubscriber;
 use Retrofit\Drupal\Render\RetrofitHtmlResponseAttachmentsProcessor;
 use Retrofit\Drupal\Routing\HookMenuRegistry;
@@ -136,6 +137,12 @@ class Provider extends ServiceProviderBase
             EntityTypeManager::class,
             (new ChildDefinition('entity_type.manager'))
             ->setDecoratedService('entity_type.manager')
+        );
+
+        $container->setDefinition(
+            CurrentPathStack::class,
+            (new ChildDefinition('path.current'))
+            ->setDecoratedService('path.current')
         );
     }
 
