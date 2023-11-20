@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
@@ -59,6 +60,11 @@ function drupal_get_schema(?string $table = null, ?bool $rebuild = false): array
     }
 }
 
+function drupal_is_https(): bool
+{
+    return \Drupal::request()->isSecure();
+}
+
 function get_t(): string
 {
     return 't';
@@ -95,6 +101,19 @@ function drupal_get_title(): array|string|\Stringable|null
 }
 
 /**
+ * @param array<string, string> $args
+ */
+function format_string(string $string, array $args = array()): MarkupInterface
+{
+    return new FormattableMarkup($string, $args);
+}
+
+function request_uri(): string
+{
+    return \Drupal::request()->getRequestUri();
+}
+
+/**
  * @param mixed[] $variables
  */
 function watchdog(
@@ -107,14 +126,3 @@ function watchdog(
     $variables['link'] = $link ?? '';
     \Drupal::logger($type)->log($severity, $message, $variables);
 }
-
-function drupal_is_https() {
-    $is_https = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
-  
-    // elc specific ssl header check.
-    // So, we're assuming that the server is either using HTTPS or HTTP_SSL_HEADER
-    if (isset($_SERVER['HTTP_SSL_HEADER']) && substr($_SERVER['HTTP_SSL_HEADER'], 0, 1) === '1') {
-      $is_https = TRUE;
-    }
-    return $is_https;
-  }

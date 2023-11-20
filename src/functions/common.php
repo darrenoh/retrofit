@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\UrlHelper;
@@ -271,11 +271,13 @@ function drupal_add_js(array|string|null $data = null, array|string|null $option
             break;
 
         default:
-            $attachment_subscriber->addAttachments([
-                'js' => [
-                    $options['data'] => $options,
-                ],
-            ]);
+            if (is_string($data)) {
+                $attachment_subscriber->addAttachments([
+                    'js' => [
+                        $data => $options,
+                    ],
+                ]);
+            }
     }
     return [];
 }
@@ -406,6 +408,14 @@ function drupal_get_library(string $module, ?string $name = null): array|false
     return $libraryDiscovery->getLibrariesByExtension($module);
 }
 
+/**
+ * @return array<int|string, mixed>
+ */
+function drupal_get_query_array(string $query): array
+{
+    parse_str($query, $result);
+    return $result;
+}
 
 /**
  * @param array<string, mixed> $options
@@ -423,6 +433,16 @@ function drupal_goto(string $path = '', array $options = [], int $http_response_
         $response = new RedirectResponse($goto, $http_response_code);
         throw new EnforcedResponseException($response);
     }
+}
+
+function drupal_json_decode(string $var): mixed
+{
+    return Json::decode($var);
+}
+
+function drupal_json_encode(mixed $var): string
+{
+    return Json::encode($var);
 }
 
 /**
@@ -517,35 +537,4 @@ function drupal_write_record(string $table, array|object &$record, array|string 
     }
 
     return $return;
-}
-
-function drupal_realpath($path) {
-    return \Drupal::service('file_system')->realpath($path);
-}
-
-function request_uri() {
-    return \Drupal::request()->getRequestUri();
-}
-
-function format_string($string, array $args = []) {
-    return new FormattableMarkup($string, $args);
-}
-
-function drupal_json_encode($data) {
-    return Drupal\Component\Serialization\Json::encode($data);
-}
-
-function drupal_json_decode(array $data) {
-    return Drupal\Component\Serialization\Json::decode($data);
-}
-
-function drupal_get_query_array($query) {
-    $result = array();
-    if (!empty($query)) {
-        foreach (explode('&', $query) as $param) {
-        $param = explode('=', $param, 2);
-        $result[$param[0]] = isset($param[1]) ? rawurldecode($param[1]) : '';
-        }
-    }
-    return $result;
 }

@@ -17,9 +17,9 @@ use Retrofit\Drupal\Menu\LocalTaskManager;
 use Retrofit\Drupal\Menu\MenuLinkManager;
 use Retrofit\Drupal\Extension\ModuleHandler;
 use Retrofit\Drupal\ParamConverter\PageArgumentsConverter;
+use Retrofit\Drupal\Path\CurrentPathStack;
 use Retrofit\Drupal\Render\AttachmentResponseSubscriber;
 use Retrofit\Drupal\Render\RetrofitHtmlResponseAttachmentsProcessor;
-use Retrofit\Drupal\Routing\Enhancer\ParamConversionEnhancer;
 use Retrofit\Drupal\Routing\HookMenuRegistry;
 use Retrofit\Drupal\Routing\HookMenuRoutes;
 use Retrofit\Drupal\Template\RetrofitExtension;
@@ -56,12 +56,6 @@ class Provider extends ServiceProviderBase
           ->register(GlobalLanguageContentSetter::class)
           ->addArgument(new Reference('language_manager'))
           ->addTag('event_subscriber');
-
-        $container->setDefinition(
-            ParamConversionEnhancer::class,
-            (new ChildDefinition('route_enhancer.param_conversion'))
-            ->setDecoratedService('route_enhancer.param_conversion')
-        );
 
         $container
           ->register(PageArgumentsConverter::class)
@@ -131,7 +125,8 @@ class Provider extends ServiceProviderBase
 
         $container->register(RetrofitTitleResolver::class)
             ->setDecoratedService('title_resolver')
-            ->addArgument(new Reference(RetrofitTitleResolver::class . '.inner'));
+            ->addArgument(new Reference(RetrofitTitleResolver::class . '.inner'))
+            ->addArgument(new Reference('request_stack'));
 
         $container->setDefinition(
             FormBuilder::class,
@@ -143,6 +138,12 @@ class Provider extends ServiceProviderBase
             EntityTypeManager::class,
             (new ChildDefinition('entity_type.manager'))
             ->setDecoratedService('entity_type.manager')
+        );
+
+        $container->setDefinition(
+            CurrentPathStack::class,
+            (new ChildDefinition('path.current'))
+            ->setDecoratedService('path.current')
         );
     }
 

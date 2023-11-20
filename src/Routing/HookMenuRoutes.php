@@ -6,6 +6,9 @@ namespace Retrofit\Drupal\Routing;
 
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
+use Retrofit\Drupal\Access\CustomControllerAccessCallback;
+use Retrofit\Drupal\Controller\DrupalGetFormController;
+use Retrofit\Drupal\Controller\PageCallbackController;
 use Retrofit\Drupal\ParamConverter\PageArgumentsConverter;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -38,130 +41,185 @@ final class HookMenuRoutes extends RouteSubscriberBase
      *   'page callback': string|string[],
      *   'page arguments'?: array<int|string>,
      *   'load arguments'?: array<int|string>,
+     *   title?: string,
      *   'title callback'?: string|string[],
      *   'title arguments'?: array<int|string>,
      *   'access callback'?: string|string[]|bool,
      *   'access arguments'?: array<int|string>,
      *   file?: string,
-     *   'file path'?: string,
-     *   title?: string
+     *   'file path'?: string
      * } $definition
      */
     private function convertToRoute(string $module, string $path, array $definition): Route
     {
-        $pageArguments = $definition['page arguments'] ?? [];
-        $parameters = [];
+        $definition += [
+            'page arguments' => [],
+            'load arguments' => [],
+            'title' => '',
+            'title callback' => '',
+            'title arguments' => [],
+            'access callback' => '',
+            'access arguments' => [],
+            'file path' => $this->moduleHandler->getModule($module)->getPath(),
+        ];
+
+        $loadArguments = $definition['load arguments'];
         $pathParts = [];
+        $parameters = [];
         foreach (explode('/', $path) as $key => $item) {
             if (!str_starts_with($item, '%')) {
                 $pathParts[] = $item;
             } else {
+                $parameter = ['converter' => PageArgumentsConverter::class];
                 $placeholder = substr($item, 1);
                 if ($placeholder === '') {
                     $placeholder = "arg$key";
+                } else {
+                    $parameter += [
+                        'load arguments' => &$loadArguments,
+                        'index' => $key,
+                    ];
                 }
-                $parameters[$placeholder] = [
-                  'converter' => PageArgumentsConverter::class,
-                  'load arguments' => $definition['load arguments'] ?? [],
-                  'index' => $key,
-                ];
+                $parameters[$placeholder] = $parameter;
                 $pathParts[] = '{' . $placeholder . '}';
             }
         }
-        foreach ($pageArguments as &$pageArgument) {
-            if (is_int($pageArgument)) {
-                $pageArgument = $pathParts[$pageArgument];
+
+        foreach ($loadArguments as &$loadArgument) {
+            switch ($loadArgument) {
+                case 'map':
+                    $loadArgument = &$pathParts;
+                    break;
+
+                default:
+                    $loadArgument = $this->ensureArgument($loadArgument, $pathParts, $parameters);
             }
         }
+        $pageArguments = $definition['page arguments'];
+        foreach ($pageArguments as &$pageArgument) {
+            $pageArgument = $this->ensureArgument($pageArgument, $pathParts, $parameters);
+        }
+        $titleArguments = $definition['title arguments'];
+        foreach ($titleArguments as &$titleArgument) {
+            $titleArgument = $this->ensureArgument($titleArgument, $pathParts, $parameters);
+        }
+        $accessArguments = $definition['access arguments'];
+        foreach ($accessArguments as &$accessArgument) {
+            $accessArgument = $this->ensureArgument($accessArgument, $pathParts, $parameters);
+        }
+
+        $defaults = [];
+        $pageCallback = match ($definition['page callback']) {
+            'drupal_get_form' => array_shift($pageArguments),
+            default => $definition['page callback'],
+        };
         if (isset($definition['file'])) {
-            $definition['file path'] = $definition['file path'] ?? $this->moduleHandler->getModule($module)->getPath();
             @include_once $definition['file path'] . '/' . $definition['file'];
         }
-        $defaults = [];
-        if (is_callable($definition['page callback'])) {
-            $pageCallback = match (true) {
-                is_array($definition['page callback']) => new \ReflectionMethod(...$definition['page callback']),
-                strpos($definition['page callback'], '::') !== false => new \ReflectionMethod(
-                    ...explode('::', $definition['page callback'], 2)
+        if (is_callable($pageCallback)) {
+            $skip = $definition['page callback'] === 'drupal_get_form' ? 2 : 0;
+            $reflectedPageCallback = match (true) {
+                is_array($pageCallback) => new \ReflectionMethod(...$pageCallback),
+                strpos($pageCallback, '::') !== false => new \ReflectionMethod(
+                    ...explode('::', $pageCallback, 2)
                 ),
-                default => new \ReflectionFunction($definition['page callback']),
+                default => new \ReflectionFunction($pageCallback),
             };
-            $paramCount = $pageCallback->getNumberOfParameters();
-            if ($paramCount > count($pageArguments)) {
-                $required = $pageCallback->getNumberOfRequiredParameters() - count($pageArguments);
-                if ($required > 0) {
-                    for ($i = 0; $i < $required; ++$i) {
-                        $placeholder = 'arg' . ++$key;
-                        $parameters[$placeholder] = [
-                            'converter' => PageArgumentsConverter::class,
-                        ];
-                        $pathParts[] = '{' . $placeholder . '}';
+            foreach (
+                array_slice(
+                    $reflectedPageCallback->getParameters(),
+                    count($pageArguments) + $skip,
+                    null,
+                    true
+                ) as $key => $arg
+            ) {
+                $placeholder = "arg$key";
+                if ($arg->isOptional()) {
+                    $default = $arg->getDefaultValue();
+                    switch (gettype($default)) {
+                        case 'boolean':
+                        case 'integer':
+                        case 'double':
+                        case 'string':
+                        case 'NULL':
+                            $defaults[$placeholder] = $default;
+                            break;
+
+                        case 'object':
+                            if ($default instanceof \Stringable) {
+                                $defaults[$placeholder] = $default;
+                                break;
+                            }
+                            // No more placeholders.
+                        default:
+                            break 2;
                     }
                 }
-                $optional = $paramCount - $required;
-                if ($optional > 0) {
-                    for ($i = 0; $i < $optional; ++$i) {
-                        $placeholder = 'arg' . ++$key;
-                        $parameters[$placeholder] = [
-                            'converter' => PageArgumentsConverter::class,
-                        ];
-                        $defaults[$placeholder] = null;
-                        $pathParts[] = '{' . $placeholder . '}';
-                    }
-                }
+                $parameters[$placeholder] = ['converter' => PageArgumentsConverter::class];
+                $pathParts[] = '{' . $placeholder . '}';
+                $pageArguments[] = '{' . $placeholder . '}';
             }
         }
-        $route = new Route('/' . implode('/', $pathParts));
-        $route->addDefaults($defaults);
-        $route->setDefault('_title', $definition['title'] ?? '');
 
-        $titleCallback = $definition['title callback'] ?? '';
-        if ($titleCallback !== '') {
-            $route->setDefault('_title_callback', '\Retrofit\Drupal\Controller\PageCallbackController::getTitle');
-            $titleArguments = $definition['title arguments'] ?? [];
-            foreach ($titleArguments as &$titleArgument) {
-                if (is_int($titleArgument)) {
-                    $titleArgument = $pathParts[$titleArgument];
-                }
-            }
-            $route->setDefault('_custom_title_callback', $titleCallback);
-            $route->setDefault('_custom_title_arguments', $titleArguments);
-        }
-
-        if ($definition['page callback'] === 'drupal_get_form') {
-            $route->setDefault('_controller', '\Retrofit\Drupal\Controller\DrupalGetFormController::getForm');
-            $route->setDefault('_form_id', array_shift($pageArguments));
-        } else {
-            $route->setDefault('_controller', '\Retrofit\Drupal\Controller\PageCallbackController::getPage');
-            $route->setDefault('_menu_callback', $definition['page callback']);
-        }
-
-        $accessCallback = $definition['access callback'] ?? '';
-        $accessArguments = $definition['access arguments'] ?? [];
-        if ($accessCallback === '' || $accessCallback === 'user_access') {
-            $route->setRequirement('_permission', reset($accessArguments) ?: '');
-        } elseif (is_bool($accessCallback)) {
-            $route->setRequirement('_access', $accessCallback ? 'TRUE' : 'FALSE');
-        } else {
-            $route->setRequirement('_custom_access', '\Retrofit\Drupal\Access\CustomControllerAccessCallback::check');
-            $route->setDefault('_custom_access_callback', $accessCallback);
-            foreach ($accessArguments as &$accessArgument) {
-                if (is_int($accessArgument)) {
-                    $accessArgument = $pathParts[$accessArgument];
-                }
-            }
-            $route->setDefault('_custom_access_arguments', $accessArguments);
-        }
-
+        $route = new Route('/' . implode('/', $pathParts), $defaults);
         $route->setOption('module', $module);
         if (isset($definition['file'])) {
             $route->setOption('file path', $definition['file path']);
             $route->setOption('file', $definition['file']);
         }
-        $route->setDefault('_custom_page_arguments', $pageArguments);
         if (count($parameters) > 0) {
             $route->setOption('parameters', $parameters);
         }
+
+        if ($definition['page callback'] === 'drupal_get_form') {
+            $route->setDefault('_controller', DrupalGetFormController::class . '::getForm');
+            $route->setDefault('_form_id', $pageCallback);
+        } else {
+            $route->setDefault('_controller', PageCallbackController::class . '::getPage');
+            $route->setDefault('_menu_callback', $definition['page callback']);
+        }
+        $route->setDefault('_custom_page_arguments', $pageArguments);
+
+        $route->setDefault('_title', $definition['title']);
+        if ($definition['title callback'] !== '') {
+            $route->setDefault('_title_callback', PageCallbackController::class . '::getTitle');
+            $route->setDefault('_custom_title_callback', $definition['title callback']);
+            $route->setDefault('_custom_title_arguments', $titleArguments);
+        }
+
+        if ($definition['access callback'] === '' || $definition['access callback'] === 'user_access') {
+            $route->setRequirement('_permission', (string) reset($accessArguments) ?: '');
+        } elseif (is_bool($definition['access callback'])) {
+            $route->setRequirement('_access', $definition['access callback'] ? 'TRUE' : 'FALSE');
+        } else {
+            $route->setRequirement('_custom_access', CustomControllerAccessCallback::class . '::check');
+            $route->setDefault('_custom_access_callback', $definition['access callback']);
+            $route->setDefault('_custom_access_arguments', $accessArguments);
+        }
+
         return $route;
+    }
+
+    /**
+     * @param array<int, string> $pathParts
+     * @param array{
+     *   converter: string,
+     *   'load arguments'?: string[],
+     *   index?: int
+     * } $parameters
+     */
+    private function ensureArgument(mixed $argument, array &$pathParts, array &$parameters): mixed
+    {
+        if (is_int($argument)) {
+            if ($argument >= count($pathParts)) {
+                foreach (range(count($pathParts), $argument) as $key) {
+                    $placeholder = "arg$key";
+                    $parameters[$placeholder] = ['converter' => PageArgumentsConverter::class];
+                    $pathParts[] = '{' . $placeholder . '}';
+                }
+            }
+            $argument = $pathParts[$argument];
+        }
+        return $argument;
     }
 }
