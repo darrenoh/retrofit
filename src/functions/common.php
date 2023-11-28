@@ -250,6 +250,20 @@ function drupal_add_js(array|string|null $data = null, array|string|null $option
     } elseif ($options === null) {
         $options = [];
     }
+    $options += [
+        'type' => 'file',
+        'group' => JS_DEFAULT,
+        'every_page' => FALSE,
+        'weight' => 0,
+        'requires_jquery' => TRUE,
+        'scope' => 'footer',
+        'cache' => !TRUE,
+        'defer' => FALSE,
+        'async' => FALSE,
+        'preprocess' => !TRUE,
+        'version' => NULL,
+        'data' => $data,
+    ];
 
     $type = $options['type'] ?? 'file';
     switch ($type) {
@@ -266,7 +280,7 @@ function drupal_add_js(array|string|null $data = null, array|string|null $option
 
         case 'inline':
             $attachment_subscriber->addAttachments([
-                'js' => $options,
+                'js' => [$options],
             ]);
             break;
 
@@ -299,6 +313,16 @@ function drupal_add_css(string|null $data = null, array|string|null $options = n
     } elseif ($options === null) {
         $options = [];
     }
+    $options += array(
+        'type' => 'file',
+        'group' => CSS_DEFAULT,
+        'weight' => 0,
+        'every_page' => FALSE,
+        'media' => 'all',
+        'preprocess' => TRUE,
+        'data' => $data,
+        'browsers' => array(),
+    );
     $type = $options['type'] ?? 'file';
     if ($type === 'inline') {
         $attachment_subscriber->addAttachments([
@@ -312,6 +336,32 @@ function drupal_add_css(string|null $data = null, array|string|null $options = n
         ]);
     }
     return [];
+}
+
+/**
+ * Constructs an array of the defaults that are used for JavaScript items.
+ *
+ * @param $data
+ *   (optional) The default data parameter for the JavaScript item array.
+ *
+ * @see drupal_get_js()
+ * @see drupal_add_js()
+ */
+function drupal_js_defaults($data = NULL) {
+    return array(
+        'type' => 'file',
+        'group' => JS_DEFAULT,
+        'every_page' => FALSE,
+        'weight' => 0,
+        'requires_jquery' => TRUE,
+        'scope' => 'header',
+        'cache' => TRUE,
+        'defer' => FALSE,
+        'async' => FALSE,
+        'preprocess' => TRUE,
+        'version' => NULL,
+        'data' => $data,
+    );
 }
 
 function drupal_html_class(string $class): string
