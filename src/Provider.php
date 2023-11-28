@@ -11,7 +11,7 @@ use Retrofit\Drupal\Controller\RetrofitTitleResolver;
 use Retrofit\Drupal\Entity\EntityTypeManager;
 use Retrofit\Drupal\Field\FieldTypePluginManager;
 use Retrofit\Drupal\Form\FormBuilder;
-use Retrofit\Drupal\Language\GlobalLanguageContentSetter;
+use Retrofit\Drupal\Language\GlobalLanguageSetter;
 use Retrofit\Drupal\Menu\LocalActionManager;
 use Retrofit\Drupal\Menu\LocalTaskManager;
 use Retrofit\Drupal\Menu\MenuLinkManager;
@@ -53,8 +53,9 @@ class Provider extends ServiceProviderBase
           ->addTag('event_subscriber');
 
         $container
-          ->register(GlobalLanguageContentSetter::class)
+          ->register(GlobalLanguageSetter::class)
           ->addArgument(new Reference('language_manager'))
+          ->addArgument(new Reference('module_handler'))
           ->addTag('event_subscriber');
 
         $container

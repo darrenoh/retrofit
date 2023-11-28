@@ -141,11 +141,6 @@ parameters:
 			path: src/Form/DrupalGetForm.php
 
 		-
-			message: "#^Method Retrofit\\\\Drupal\\\\Language\\\\GlobalLanguageContent\\:\\:__get\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/Language/GlobalLanguageContent.php
-
-		-
 			message: "#^Property Drupal\\\\Component\\\\Plugin\\\\PluginManagerBase\\:\\:\\$discovery \\(Drupal\\\\Component\\\\Plugin\\\\Discovery\\\\DiscoveryInterface\\) in isset\\(\\) is not nullable\\.$#"
 			count: 1
 			path: src/Menu/LocalActionManager.php
@@ -166,19 +161,9 @@ parameters:
 			path: src/ParamConverter/PageArgumentsConverter.php
 
 		-
-			message: "#^Cannot access offset 'path' on mixed\\.$#"
+			message: "#^Method Retrofit\\\\Drupal\\\\ParamConverter\\\\PageArgumentsConverter\\:\\:convert\\(\\) has parameter \\$defaults with no value type specified in iterable type array\\.$#"
 			count: 1
-			path: src/Path/CurrentPathStack.php
-
-		-
-			message: "#^Cannot call method getPathInfo\\(\\) on Symfony\\\\Component\\\\HttpFoundation\\\\Request\\|null\\.$#"
-			count: 1
-			path: src/Path/CurrentPathStack.php
-
-		-
-			message: "#^Method Retrofit\\\\Drupal\\\\Path\\\\CurrentPathStack\\:\\:getPath\\(\\) should return string but returns mixed\\.$#"
-			count: 1
-			path: src/Path/CurrentPathStack.php
+			path: src/ParamConverter/PageArgumentsConverter.php
 
 		-
 			message: "#^Method Retrofit\\\\Drupal\\\\Plugin\\\\Block\\\\Block\\:\\:blockForm\\(\\) has parameter \\$form with no value type specified in iterable type array\\.$#"
@@ -569,11 +554,6 @@ parameters:
 			message: "#^Parameter \\#1 \\$entity of class Retrofit\\\\Drupal\\\\Entity\\\\WrappedConfigEntity constructor expects Drupal\\\\Core\\\\Config\\\\Entity\\\\ConfigEntityInterface, Drupal\\\\Core\\\\Entity\\\\EntityInterface\\|null given\\.$#"
 			count: 1
 			path: src/Theme/HookPreprocess.php
-
-		-
-			message: "#^Method Retrofit\\\\Drupal\\\\User\\\\GlobalUser\\:\\:__get\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/User/GlobalUser.php
 
 		-
 			message: "#^Method Retrofit\\\\Drupal\\\\User\\\\GlobalUser\\:\\:__set\\(\\) has parameter \\$value with no type specified\\.$#"
@@ -1117,8 +1097,8 @@ parameters:
 
 		-
 			message: "#^Cannot access property \\$language on mixed\\.$#"
-			count: 1
-			path: tests/src/Integration/Language/GlobalLanguageContentTest.php
+			count: 3
+			path: tests/src/Integration/Language/GlobalLanguageTest.php
 
 		-
 			message: "#^Call to an undefined method object\\:\\:build\\(\\)\\.$#"
