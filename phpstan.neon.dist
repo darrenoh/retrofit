@@ -8,6 +8,8 @@ parameters:
 	scanFiles:
 		- vendor/drupal/core/includes/common.inc
 		- vendor/drupal/core/includes/theme.inc
+	scanDirectories:
+		- vendor/drupal/core/modules/node/src
 includes:
 	- phar://phpstan.phar/conf/bleedingEdge.neon
 	- phpstan-baseline.neon
