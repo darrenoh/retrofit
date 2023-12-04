@@ -92,3 +92,16 @@ function db_table_exists(string $table): bool
 {
     return DB::get()->schema()->tableExists($table);
 }
+
+function db_add_field($table, $field, $spec, $keys_new = array()) {
+    return DB::get()->schema()->addField($table, $field, $spec, $keys_new);
+}
+
+function db_change_field($table, $field, $field_new, $spec, $keys_new = array()) {
+    return DB::get()->schema()->changeField($table, $field, $field_new, $spec, $keys_new);
+}
+
+function db_field_exists($table, $field) {
+    return DB::get()->schema()->fieldExists($table, $field);
+}
+  

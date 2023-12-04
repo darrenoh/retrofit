@@ -22,7 +22,7 @@ function node_load(int|string|null $nid = null, int|string|null $vid = null, boo
 function node_view($node, $view_mode = 'full', $langcode = null)
 {
     return \Drupal::entityTypeManager()
-      ->getViewBuilder('nod')
+      ->getViewBuilder('node')
       ->view($node, $view_mode, $langcode);
 }
 

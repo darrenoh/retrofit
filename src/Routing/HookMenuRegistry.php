@@ -32,7 +32,7 @@ final class HookMenuRegistry
             $definitions = $hook();
             foreach ($definitions as $path => $definition) {
                   $definition['type'] = $definition['type'] ?? MENU_NORMAL_ITEM;
-                  $definition['route_name'] = $module . '.' . substr(hash('sha256', $path), 0, 25);
+                  $definition['route_name'] = $definition['route_name'] ?? $module . '.' . substr(hash('sha256', $path), 0, 25);
                   $definitions[$path] = $definition;
             }
             $this->definitions[$module] = $definitions;
