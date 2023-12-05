@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Field\FieldFilteredMarkup;
+use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldConfig;
@@ -24,18 +25,10 @@ function _field_sort_items_value_helper(mixed $a, mixed $b): float
  */
 function field_create_field(array $field): FieldStorageConfigInterface
 {
-    $info = drupal_static('retrofit_field_info');
-    if (!isset($info)) {
-        $info = [];
-        \Drupal::moduleHandler()->invokeAllWith(
-            'field_info',
-            function (callable $hook, string $module) use (&$info): void {
-                $info += $hook();
-            }
-        );
-    }
-    assert(is_array($info));
-    if (isset($info[$field['type']])) {
+    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    assert($field_type_manager instanceof FieldTypePluginManagerInterface);
+    $info = $field_type_manager->getDefinitions();
+    if (isset($info["retrofit_field:$field[type]"])) {
         $field['type'] = "retrofit_field:$field[type]";
     }
     $field_storage = FieldStorageConfig::create($field + ['entity_type' => 'node']);
