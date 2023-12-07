@@ -28,9 +28,11 @@ function field_create_field(array $field): FieldStorageConfigInterface
     $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
     assert($field_type_manager instanceof FieldTypePluginManagerInterface);
     $info = $field_type_manager->getDefinitions();
-    if (isset($info["retrofit_field:$field[type]"])) {
-        $field['type'] = "retrofit_field:$field[type]";
-    }
+    $field['type'] = match ($field['type']) {
+        'datestamp' => 'datetime',
+        'list_text' => 'list_string',
+        default => isset($info["retrofit_field:$field[type]"]) ? "retrofit_field:$field[type]" : $field['type'],
+    };
     $field_storage = FieldStorageConfig::create($field + ['entity_type' => 'node']);
     $field_storage->save();
     return $field_storage;
