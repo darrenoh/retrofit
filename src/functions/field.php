@@ -81,3 +81,13 @@ function field_form_set_state(
 ): void {
     WidgetBase::setWidgetState($parents, $field_name, $form_state, $field_state);
 }
+
+function field_info_field(string $field_name): ?FieldStorageConfigInterface
+{
+    return FieldStorageConfig::loadByName('node', $field_name);
+}
+
+function field_info_instance(string $entity_type, string $field_name, string $bundle_name): ?FieldConfigInterface
+{
+    return FieldConfig::loadByName($entity_type, $bundle_name, $field_name);
+}
