@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Config\StorageCacheInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeTypeInterface;
@@ -72,4 +74,14 @@ function node_type_delete(string $type): void
     $type = NodeType::load($type);
     assert($type instanceof NodeTypeInterface);
     $type->delete();
+}
+
+function node_types_rebuild(): void
+{
+    $tags = \Drupal::config('node_type')->getCacheTags();
+    $tags[] = 'config:node_type_list';
+    Cache::invalidateTags($tags);
+    $storage = \Drupal::service('config.storage');
+    assert($storage instanceof StorageCacheInterface);
+    $storage->resetListCache();
 }
