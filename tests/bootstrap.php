@@ -20,6 +20,7 @@ $loader->addPsr4('Drupal\\entity_test\\', __DIR__ . '/../vendor/drupal/core/modu
 $loader->addPsr4('Drupal\\field\\', __DIR__ . '/../vendor/drupal/core/modules/field/src');
 $loader->addPsr4('Drupal\\node\\', __DIR__ . '/../vendor/drupal/core/modules/node/src');
 $loader->addPsr4('Drupal\\sqlite\\', __DIR__ . '/../vendor/drupal/core/modules/sqlite/src');
+$loader->addPsr4('Drupal\\taxonomy\\', __DIR__ . '/../vendor/drupal/core/modules/taxonomy/src');
 $loader->addPsr4('Drupal\\user\\', __DIR__ . '/../vendor/drupal/core/modules/user/src');
 $loader->addPsr4('Drupal\\Tests\\user\\Traits\\', __DIR__ . '/../vendor/drupal/core/modules/user/tests/src/Traits');
 
