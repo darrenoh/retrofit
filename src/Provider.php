@@ -7,6 +7,7 @@ namespace Retrofit\Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
 use Drupal\Core\Template\Loader\FilesystemLoader;
+use Retrofit\Drupal\Asset\RetrofitLibraryDiscovery;
 use Retrofit\Drupal\Controller\RetrofitTitleResolver;
 use Retrofit\Drupal\Entity\EntityTypeManager;
 use Retrofit\Drupal\Field\FieldTypePluginManager;
@@ -113,10 +114,15 @@ class Provider extends ServiceProviderBase
 
         $container->register(RetrofitHtmlResponseAttachmentsProcessor::class)
             ->setDecoratedService('html_response.attachments_processor')
-            ->addArgument(new Reference(RetrofitHtmlResponseAttachmentsProcessor::class . '.inner'));
+            ->addArgument(new Reference(RetrofitHtmlResponseAttachmentsProcessor::class . '.inner'))
+            ->setAutowired(true);
 
         $container->register(AttachmentResponseSubscriber::class)
             ->addTag('event_subscriber');
+
+        $container->register(RetrofitLibraryDiscovery::class)
+            ->setDecoratedService('library.discovery')
+            ->setAutowired(true);
 
         $container->setDefinition(
             FieldTypePluginManager::class,
