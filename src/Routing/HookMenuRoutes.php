@@ -60,7 +60,7 @@ final class HookMenuRoutes extends RouteSubscriberBase
             'title arguments' => [],
             'access callback' => '',
             'access arguments' => [],
-            'file path' => $this->moduleHandler->getModule($module)->getPath(),
+            'file path' => '',
         ];
 
         $loadArguments = $definition['load arguments'];
@@ -116,7 +116,11 @@ final class HookMenuRoutes extends RouteSubscriberBase
             default => $definition['page callback'],
         };
         if (isset($definition['file'])) {
-            @include_once $definition['file path'] . '/' . $definition['file'];
+            $filePath = $definition['file path'] ?: $this->moduleHandler->getModule($module)->getPath();
+            $definition['include file'] = $filePath . '/' . $definition['file'];
+            if (file_exists($definition['include file'])) {
+                require_once $definition['include file'];
+            }
         }
         if (is_callable($pageCallback)) {
             $skip = $definition['page callback'] === 'drupal_get_form' ? 2 : 0;
@@ -166,9 +170,8 @@ final class HookMenuRoutes extends RouteSubscriberBase
 
         $route = new Route('/' . implode('/', $pathParts), $defaults);
         $route->setOption('module', $module);
-        if (isset($definition['file'])) {
-            $route->setOption('file path', $definition['file path']);
-            $route->setOption('file', $definition['file']);
+        if (isset($definition['include file'])) {
+            $route->setOption('include file', $definition['include file']);
         }
         if (count($parameters) > 0) {
             $route->setOption('parameters', $parameters);
