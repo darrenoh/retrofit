@@ -65,8 +65,8 @@ final class RetrofitHtmlResponseAttachmentsProcessor implements AttachmentsRespo
         }
         if (isset($attachments['js']) && is_array($attachments['js'])) {
             foreach ($attachments['js'] as $key => $item) {
-                if (is_array($item) && isset($item['type'])) {
-                    switch ($item['type']) {
+                if (is_array($item)) {
+                    switch ($item['type'] ?? 'file') {
                         case 'inline':
                             $element = [
                                 '#tag' => 'script',
@@ -111,6 +111,10 @@ final class RetrofitHtmlResponseAttachmentsProcessor implements AttachmentsRespo
                                 );
                             }
                             unset($attachments['js'][$key]);
+                            break;
+
+                        default:
+                            $attachments['js'][$key]['attributes']['defer'] = $item['defer'] ?? false;
                             break;
                     }
                 }
